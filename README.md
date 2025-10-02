@@ -4,14 +4,21 @@
 ![Magento](https://img.shields.io/badge/magento-2.4.8-orange.svg)
 ![PHP](https://img.shields.io/badge/php-8.3-purple.svg)
 
+[![Latest Stable Version](https://img.shields.io/github/v/release/iparmentier/magento2-module-review-widget)](https://github.com/iparmentier/magento2-module-review-widget/releases)
+[![Magento 2](https://img.shields.io/badge/Magento-2.4.x-brightgreen.svg)](https://magento.com)
+[![PHP](https://img.shields.io/badge/PHP-8.3+-blue.svg)](https://www.php.net)
+
+[SPONSOR: Amadeco](https://www.amadeco.fr)
+
 Professional module for advanced display of customer reviews with SEO and Rich Snippets support.
 
-Backend Screenshot :
+### Backend Screenshots
 
 <img width="948" height="638" alt="Image" src="https://github.com/user-attachments/assets/4f80b519-962c-42f4-a791-4d3dbc0b23a5" />
+
 <img width="2314" height="1882" alt="Image" src="https://github.com/user-attachments/assets/4e0a8397-48c8-49e2-986a-00f7d45e2dd5" />
 
-Frontend Screenshot :
+### Frontend Screenshots
 
 <img width="1199" height="635" alt="Image" src="https://github.com/user-attachments/assets/1844f263-e4b1-4908-9426-791785cd198b" />
 <img width="666" height="80" alt="Image" src="https://github.com/user-attachments/assets/28586f53-c7f2-4951-92f3-bdf04043d476" />
