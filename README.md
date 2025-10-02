@@ -1,9 +1,5 @@
 # Amadeco ReviewWidget - Magento 2 Module
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
-![Magento](https://img.shields.io/badge/magento-2.4.8-orange.svg)
-![PHP](https://img.shields.io/badge/php-8.3-purple.svg)
-
 [![Latest Stable Version](https://img.shields.io/github/v/release/iparmentier/magento2-module-review-widget)](https://github.com/iparmentier/magento2-module-review-widget/releases)
 [![Magento 2](https://img.shields.io/badge/Magento-2.4.x-brightgreen.svg)](https://magento.com)
 [![PHP](https://img.shields.io/badge/PHP-8.3+-blue.svg)](https://www.php.net)
