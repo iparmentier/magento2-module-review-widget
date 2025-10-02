@@ -6,6 +6,12 @@
 
 Professional module for advanced display of customer reviews with SEO and Rich Snippets support.
 
+Backend Screenshot :
+
+<img width="2314" height="1882" alt="Image" src="https://github.com/user-attachments/assets/4e0a8397-48c8-49e2-986a-00f7d45e2dd5" />
+
+Frontend Screenshot :
+
 <img width="1199" height="635" alt="Image" src="https://github.com/user-attachments/assets/1844f263-e4b1-4908-9426-791785cd198b" />
 <img width="666" height="80" alt="Image" src="https://github.com/user-attachments/assets/28586f53-c7f2-4951-92f3-bdf04043d476" />
 
