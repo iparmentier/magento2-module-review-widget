@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * System Configuration
+ *
+ * @category  Amadeco
+ * @package   Amadeco_ReviewWidget
+ * @author    Ilan Parmentier <contact@amadeco.fr>
+ * @copyright Copyright (c) 2025 Amadeco
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="catalog">
+            <group id="review_widget" translate="label" type="text" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Review Widget Settings</label>
+                <field id="enable_schema_org" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Schema.org Markup</label>
+                    <comment>Add structured data for better SEO (Rich Snippets)</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="default_min_rating" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Default Minimum Rating</label>
+                    <comment>Default minimum rating for reviews display (1-5)</comment>
+                    <validate>validate-number validate-number-range number-range-1-5</validate>
+                </field>
+                <field id="default_min_char_length" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Default Minimum Character Length</label>
+                    <comment>Default minimum number of characters for reviews. Leave empty to disable.</comment>
+                    <validate>validate-zero-or-greater</validate>
+                </field>
+                <field id="default_page_size" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Default Reviews Per Page</label>
+                    <comment>Default number of reviews to display</comment>
+                    <validate>validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="cache_lifetime" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Cache Lifetime (seconds)</label>
+                    <comment>How long to cache widget data. Default: 86400 (24 hours)</comment>
+                    <validate>validate-digits validate-zero-or-greater</validate>
+                </field>
+                <field id="enable_lazy_loading" translate="label comment" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Lazy Loading</label>
+                    <comment>Load reviews via AJAX for better performance</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

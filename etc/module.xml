@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Module Configuration
+ *
+ * @category  Amadeco
+ * @package   Amadeco_ReviewWidget
+ * @author    Ilan Parmentier <contact@amadeco.fr>
+ * @copyright Copyright (c) 2025 Amadeco
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="Amadeco_ReviewWidget" setup_version="2.0.0">
+        <sequence>
+            <module name="Magento_Review"/>
+            <module name="Magento_Catalog"/>
+            <module name="Magento_Widget"/>
+            <module name="Magento_Store"/>
+        </sequence>
+    </module>
+</config>

@@ -1,0 +1,89 @@
+<?php
+/**
+ * Reviews List Carousel Template
+ *
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Amadeco\ReviewWidget\Block\Widget\ReviewsListWidget $block
+ * @var \Amadeco\ReviewWidget\ViewModel\ReviewsList $reviewsViewModel
+ */
+
+$reviewsViewModel = $block->getReviewsListViewModel();
+$reviewsViewModel->prepareSchemaData();
+
+$reviewCollection = $reviewsViewModel->getReviewCollection();
+$badgeHtml = $block->getBadgeRatingHtml();
+?>
+<div class="block widget-reviews-list widget-reviews-carousel">
+
+    <?php if ($block->hasTitle() || $badgeHtml): ?>
+        <div class="block-title">
+            <?php if ($block->hasTitle()): ?>
+                <strong class="title">
+                    <span><?= $escaper->escapeHtml($block->getTitle()) ?></span>
+                </strong>
+            <?php endif; ?>
+
+            <?php if ($badgeHtml): ?>
+                <div class="title-badge">
+                    <?= /* @noEscape */ $badgeHtml ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+
+    <div class="block-content">
+        <div class="reviews-carousel-wrapper">
+            <ol class="reviews-items" data-mage-init='{"carousel": {}}'>
+                <?php foreach ($reviewCollection->getItems() as $review): ?>
+                <?php $rating = $reviewsViewModel->getReviewRatingSummary($review); ?>
+                    <li class="review-item">
+                        <div class="review-item-content">
+                            <div class="review-header">
+                                <div class="rating-summary">
+                                    <span class="label">
+                                        <span><?= $escaper->escapeHtml(__('Rating')) ?></span>
+                                    </span>
+                                    <div class="rating-result"
+                                        title="<?= $escaper->escapeHtmlAttr(__('Rating: %1 out of 5', number_format($rating / 20, 1))) ?>"
+                                        aria-label="<?= $escaper->escapeHtmlAttr(__('Rating: %1 out of 5 stars', number_format($rating / 20, 1))) ?>">
+                                        <span style="width:<?= $escaper->escapeHtmlAttr($rating) ?>%">
+                                            <span><?= $escaper->escapeHtml(__('Rating: %1 out of 5', number_format($rating / 20, 1))) ?></span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <strong class="review-title"><?= $escaper->escapeHtml($review->getTitle()) ?></strong>
+                            </div>
+
+                            <div class="review-body">
+                                <blockquote class="review-quote">
+                                    <p><?= $escaper->escapeHtml($review->getDetail()) ?></p>
+                                    <footer class="review-meta">
+                                        <span class="review-author">
+                                            <?= $escaper->escapeHtml(__('Review By')) ?>
+                                            <strong><?= $escaper->escapeHtml($review->getNickname()) ?></strong>
+                                        </span>
+                                        <span class="review-date">
+                                            <?= $escaper->escapeHtml(__('Written On')) ?>
+                                            <time datetime="<?= $escaper->escapeHtmlAttr($review->getCreatedAt()) ?>">
+                                                <?= $escaper->escapeHtml($block->formatDate($review->getCreatedAt(), \IntlDateFormatter::MEDIUM)) ?>
+                                            </time>
+                                        </span>
+                                    </footer>
+                                </blockquote>
+                            </div>
+
+                            <div class="review-actions">
+                                <a href="<?= $escaper->escapeUrl($review->getProductUrl()) ?>"
+                                class="action primary"
+                                title="<?= $escaper->escapeHtmlAttr(__('View %1', $review->getName())) ?>">
+                                    <span><?= $escaper->escapeHtml(__('View Product')) ?></span>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                <?php endforeach; ?>
+            </ol>
+        </div>
+    </div>
+</div>
+<?= /* @noEscape */ $reviewsViewModel->getSchemaJsonLd() ?>

@@ -1,0 +1,187 @@
+<?php
+/**
+ * Schema.org Manager Service
+ *
+ * Manages Schema.org data generation to prevent duplicates on the same page
+ *
+ * @category  Amadeco
+ * @package   Amadeco_ReviewWidget
+ * @author    Ilan Parmentier <contact@amadeco.fr>
+ * @copyright Copyright (c) 2025 Amadeco
+ * @license   Proprietary License
+ */
+declare(strict_types=1);
+
+namespace Amadeco\ReviewWidget\Helper;
+
+use Psr\Log\LoggerInterface;
+
+/**
+ * Class SchemaManager
+ *
+ * Ensures only one Schema.org markup is generated per page
+ */
+class SchemaManager
+{
+    /**
+     * Flags to track if schema has been generated in current request
+     *
+     * @var bool
+     */
+    private bool $badgeSchemaGenerated = false;
+
+    /**
+     * @var bool
+     */
+    private bool $reviewsSchemaGenerated = false;
+
+    /**
+     * Combined reviews data from all widgets on the page
+     *
+     * @var array
+     */
+    private array $combinedReviews = [];
+
+    /**
+     * Store rating data for schema
+     *
+     * @var array|null
+     */
+    private ?array $storeRatingData = null;
+
+    /**
+     * @param Config $config
+     * @param LoggerInterface $logger
+     */
+    public function __construct(
+        private readonly Config $config,
+        private readonly LoggerInterface $logger
+    ) {
+    }
+
+    /**
+     * Check if Schema.org is enabled in configuration
+     *
+     * @return bool
+     */
+    public function isSchemaEnabled(): bool
+    {
+        return $this->config->isSchemaOrgEnabled();
+    }
+
+    /**
+     * Check if badge schema has already been generated on this page
+     *
+     * @return bool
+     */
+    public function isBadgeSchemaGenerated(): bool
+    {
+        return $this->badgeSchemaGenerated;
+    }
+
+    /**
+     * Mark badge schema as generated for this page
+     *
+     * @return void
+     */
+    public function markBadgeSchemaAsGenerated(): void
+    {
+        $this->badgeSchemaGenerated = true;
+    }
+
+    /**
+     * Check if reviews schema has already been generated on this page
+     *
+     * @return bool
+     */
+    public function isReviewsSchemaGenerated(): bool
+    {
+        return $this->reviewsSchemaGenerated;
+    }
+
+    /**
+     * Mark reviews schema as generated for this page
+     *
+     * @return void
+     */
+    public function markReviewsSchemaAsGenerated(): void
+    {
+        $this->reviewsSchemaGenerated = true;
+    }
+
+    /**
+     * Set store rating data for schema generation
+     *
+     * @param array $data
+     * @return void
+     */
+    public function setStoreRatingData(array $data): void
+    {
+        if ($this->storeRatingData === null) {
+            $this->storeRatingData = $data;
+        }
+    }
+
+    /**
+     * Get store rating data
+     *
+     * @return array|null
+     */
+    public function getStoreRatingData(): ?array
+    {
+        return $this->storeRatingData;
+    }
+
+    /**
+     * Add review data to combined collection
+     *
+     * Allows multiple widgets to contribute reviews to a single schema output
+     *
+     * @param array $reviewData Review data in Schema.org format
+     * @return void
+     */
+    public function addReviewToCombined(array $reviewData): void
+    {
+        try {
+            $reviewHash = md5(json_encode($reviewData));
+
+            if (!isset($this->combinedReviews[$reviewHash])) {
+                $this->combinedReviews[$reviewHash] = $reviewData;
+            }
+        } catch (\Exception $e) {
+            $this->logger->error(
+                'Error adding review to combined schema: ' . $e->getMessage(),
+                ['exception' => $e]
+            );
+        }
+    }
+
+    /**
+     * Get all combined review data
+     *
+     * @return array Array of review data without hash keys
+     */
+    public function getCombinedReviews(): array
+    {
+        return array_values($this->combinedReviews);
+    }
+
+    /**
+     * Check if we should generate schema for this widget instance
+     *
+     * @param string $schemaType Type of schema: 'badge' or 'reviews'
+     * @return bool
+     */
+    public function shouldGenerateSchema(string $schemaType): bool
+    {
+        if (!$this->isSchemaEnabled()) {
+            return false;
+        }
+
+        return match ($schemaType) {
+            'badge' => !$this->isBadgeSchemaGenerated(),
+            'reviews' => !$this->isReviewsSchemaGenerated(),
+            default => false
+        };
+    }
+}

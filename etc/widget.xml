@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Widget Configuration
+ *
+ * @category  Amadeco
+ * @package   Amadeco_ReviewWidget
+ * @author    Ilan Parmentier <contact@amadeco.fr>
+ * @copyright Copyright (c) 2025 Amadeco
+ */
+-->
+<widgets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Widget:etc/widget.xsd">
+
+    <!-- Reviews List Widget -->
+    <widget id="reviewWidget_reviewsList" class="Amadeco\ReviewWidget\Block\Widget\ReviewsListWidget">
+        <label translate="true">Customer Reviews List Widget (Advanced)</label>
+        <description translate="true">Displays a filtered list of customer reviews with advanced options</description>
+        <parameters>
+            <parameter name="title" xsi:type="text" required="false" visible="true" sort_order="10">
+                <label translate="true">Widget Title</label>
+                <description translate="true">Optional title displayed above the reviews list</description>
+            </parameter>
+
+            <parameter name="page_size" xsi:type="text" required="true" visible="true" sort_order="20">
+                <label translate="true">Number of Reviews to Display</label>
+                <value>10</value>
+            </parameter>
+
+            <parameter name="min_rating" xsi:type="text" required="false" visible="true" sort_order="30">
+                <label translate="true">Minimum Rating (1-5)</label>
+                <description translate="true">Display only reviews with this minimum rating. Leave empty to use default from configuration.</description>
+            </parameter>
+
+            <parameter name="min_char_length" xsi:type="text" required="false" visible="true" sort_order="40">
+                <label translate="true">Minimum Review Length</label>
+                <description translate="true">Minimum number of characters for reviews. Leave empty to disable.</description>
+            </parameter>
+
+            <parameter name="category_id" xsi:type="text" required="false" visible="true" sort_order="50">
+                <label translate="true">Filter by Category ID</label>
+                <description translate="true">Show only reviews for products in this category. Leave empty to show all.</description>
+            </parameter>
+
+            <parameter name="days_ago" xsi:type="text" required="false" visible="true" sort_order="60">
+                <label translate="true">Reviews from Last X Days</label>
+                <description translate="true">Show only reviews from the last X days. Leave empty to show all.</description>
+            </parameter>
+
+            <parameter name="sort_order" xsi:type="select" required="false" visible="true" sort_order="70">
+                <label translate="true">Sort Order</label>
+                <description translate="true">How to sort the displayed reviews</description>
+                <options>
+                    <option name="random" value="random" selected="true">
+                        <label translate="true">Random</label>
+                    </option>
+                    <option name="recent" value="recent">
+                        <label translate="true">Most Recent</label>
+                    </option>
+                    <option name="rating" value="rating">
+                        <label translate="true">Highest Rating</label>
+                    </option>
+                </options>
+            </parameter>
+
+            <parameter name="show_badge_rating" xsi:type="select" required="false" visible="true" sort_order="80" source_model="Magento\Config\Model\Config\Source\Yesno">
+                <label translate="true">Show Store Rating Badge</label>
+                <description translate="true">Display overall store rating above the reviews list</description>
+            </parameter>
+
+            <parameter name="badge_rating_template" xsi:type="select" required="false" visible="true" sort_order="90">
+                <label translate="true">Badge Template</label>
+                <depends>
+                    <parameter name="show_badge_rating" value="1" />
+                </depends>
+                <options>
+                    <option name="block" value="Amadeco_ReviewWidget::widget/badge/block.phtml" selected="true">
+                        <label translate="true">Block Template</label>
+                    </option>
+                    <option name="inline" value="Amadeco_ReviewWidget::widget/badge/inline.phtml">
+                        <label translate="true">Inline Template</label>
+                    </option>
+                </options>
+            </parameter>
+
+            <parameter name="template" xsi:type="select" required="false" visible="true" sort_order="100">
+                <label translate="true">Display Template</label>
+                <options>
+                    <option name="carousel" value="Amadeco_ReviewWidget::widget/reviewslist/carousel.phtml" selected="true">
+                        <label translate="true">Carousel (Slider)</label>
+                    </option>
+                    <option name="grid" value="Amadeco_ReviewWidget::widget/reviewslist/grid.phtml">
+                        <label translate="true">Grid Layout</label>
+                    </option>
+                    <option name="list" value="Amadeco_ReviewWidget::widget/reviewslist/list.phtml">
+                        <label translate="true">List Layout</label>
+                    </option>
+                </options>
+            </parameter>
+        </parameters>
+    </widget>
+
+    <!-- Badge Store Rating Widget -->
+    <widget id="reviewWidget_badgeStoreRating" class="Amadeco\ReviewWidget\Block\Widget\BadgeStoreRatingWidget">
+        <label translate="true">Store Rating Badge Widget</label>
+        <description translate="true">Display overall store rating with total review count</description>
+        <parameters>
+            <parameter name="show_rating_summary" xsi:type="select" visible="true" sort_order="10" source_model="Magento\Config\Model\Config\Source\Yesno">
+                <label translate="true">Show Rating Stars</label>
+                <description translate="true">Display visual rating stars indicator</description>
+            </parameter>
+
+            <parameter name="template" xsi:type="select" required="false" visible="true" sort_order="20">
+                <label translate="true">Display Template</label>
+                <options>
+                    <option name="block" value="Amadeco_ReviewWidget::widget/badge/block.phtml" selected="true">
+                        <label translate="true">Block Template</label>
+                    </option>
+                    <option name="inline" value="Amadeco_ReviewWidget::widget/badge/inline.phtml">
+                        <label translate="true">Inline Template</label>
+                    </option>
+                </options>
+            </parameter>
+
+            <parameter name="css_class" xsi:type="text" required="false" visible="true" sort_order="30">
+                <label translate="true">Custom CSS Class</label>
+                <description translate="true">Additional CSS classes for custom styling</description>
+            </parameter>
+        </parameters>
+    </widget>
+
+</widgets>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Events Configuration
+ *
+ * @category  Amadeco
+ * @package   Amadeco_ReviewWidget
+ * @author    Ilan Parmentier <contact@amadeco.fr>
+ * @copyright Copyright (c) 2025 Amadeco
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+
+    <!-- Clear cache when a review is saved -->
+    <event name="review_save_after">
+        <observer name="amadeco_review_widget_clear_cache"
+                  instance="Amadeco\ReviewWidget\Observer\ClearReviewCache" />
+    </event>
+
+    <!-- Clear cache when a review is deleted -->
+    <event name="review_delete_after">
+        <observer name="amadeco_review_widget_clear_cache_delete"
+                  instance="Amadeco\ReviewWidget\Observer\ClearReviewCache" />
+    </event>
+
+    <!-- Clear cache when review status changes -->
+    <event name="review_status_change">
+        <observer name="amadeco_review_widget_clear_cache_status"
+                  instance="Amadeco\ReviewWidget\Observer\ClearReviewCache" />
+    </event>
+
+</config>

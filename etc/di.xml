@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Dependency Injection Configuration
+ *
+ * @category  Amadeco
+ * @package   Amadeco_ReviewWidget
+ * @author    Ilan Parmentier <contact@amadeco.fr>
+ * @copyright Copyright (c) 2025 Amadeco
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <!-- Service Layer Preferences -->
+    <preference for="Amadeco\ReviewWidget\Api\ReviewRepositoryInterface"
+                type="Amadeco\ReviewWidget\Model\ReviewRepository"/>
+    <preference for="Amadeco\ReviewWidget\Api\RatingCalculatorInterface"
+                type="Amadeco\ReviewWidget\Service\RatingCalculator"/>
+    <preference for="Amadeco\ReviewWidget\Api\Data\StoreRatingInterface"
+                type="Amadeco\ReviewWidget\Model\Data\StoreRating"/>
+
+    <!-- Configuration Helper -->
+    <type name="Amadeco\ReviewWidget\Helper\Config">
+        <arguments>
+            <argument name="configPath" xsi:type="string">catalog/review_widget</argument>
+        </arguments>
+    </type>
+
+    <!-- SchemaManager as Singleton -->
+    <type name="Amadeco\ReviewWidget\Helper\SchemaManager">
+        <arguments>
+            <argument name="config" xsi:type="object">Amadeco\ReviewWidget\Helper\Config</argument>
+        </arguments>
+    </type>
+
+    <!-- Cache Pool -->
+    <type name="Magento\Framework\App\Cache\Type\FrontendPool">
+        <arguments>
+            <argument name="typeFrontendMap" xsi:type="array">
+                <item name="amadeco_review_widget" xsi:type="string">amadeco_review_widget_cache</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="amadeco_review_widget_cache" type="Magento\Framework\Cache\Frontend\Decorator\TagScope">
+        <arguments>
+            <argument name="cacheFrontend" xsi:type="object">default</argument>
+            <argument name="tag" xsi:type="string">AMADECO_REVIEW_WIDGET</argument>
+        </arguments>
+    </virtualType>
+
+</config>

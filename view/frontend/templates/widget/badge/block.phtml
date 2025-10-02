@@ -1,0 +1,44 @@
+<?php
+/**
+ * Badge Store Rating Block Template
+ *
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Amadeco\ReviewWidget\Block\Widget\BadgeStoreRatingWidget $block
+ * @var \Amadeco\ReviewWidget\ViewModel\BadgeRating $viewModel
+ */
+
+$viewModel = $block->getBadgeRatingViewModel();
+$viewModel->prepareSchemaData();
+
+$storeRating = $viewModel->getStoreRating();
+$showRatingSummary = $block->getShowRatingSummary();
+$customClass = $block->getCustomCssClass();
+?>
+<div class="block widget-badge-rating <?= $escaper->escapeHtmlAttr($customClass) ?>">
+    <div class="block-content">
+        <?php if ($showRatingSummary): ?>
+            <div class="rating-summary">
+                <span class="label">
+                    <span><?= $escaper->escapeHtml(__('Rating')) ?></span>
+                </span>
+                <div class="rating-result"
+                    title="<?= $escaper->escapeHtmlAttr(__('Overall rating of %1 out of %2', $viewModel->formatRating($storeRating->getNote()), 5)) ?>"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Rating: %1 out of 5 stars', $viewModel->formatRating($storeRating->getNote()))) ?>">
+                    <span style="width:<?= $escaper->escapeHtmlAttr($storeRating->getPercentage()) ?>%">
+                        <span><?= $escaper->escapeHtml(__('Rating: %1 out of 5', $viewModel->formatRating($storeRating->getNote()))) ?></span>
+                    </span>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <div class="reviews-actions">
+            <span class="rating-value">
+                <?= $escaper->escapeHtml(__('Overall rating of %1 out of %2', $viewModel->formatRating($storeRating->getNote()), 5)) ?>
+            </span>
+            <span class="review-count">
+                <?= $escaper->escapeHtml(__("Based on %1 customer's reviews", $storeRating->getTotal())) ?>
+            </span>
+        </div>
+    </div>
+</div>
+<?= /* @noEscape */ $viewModel->getSchemaJsonLd() ?>
