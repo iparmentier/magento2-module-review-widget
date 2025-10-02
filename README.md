@@ -8,6 +8,7 @@ Professional module for advanced display of customer reviews with SEO and Rich S
 
 Backend Screenshot :
 
+<img width="948" height="638" alt="Image" src="https://github.com/user-attachments/assets/4f80b519-962c-42f4-a791-4d3dbc0b23a5" />
 <img width="2314" height="1882" alt="Image" src="https://github.com/user-attachments/assets/4e0a8397-48c8-49e2-986a-00f7d45e2dd5" />
 
 Frontend Screenshot :
