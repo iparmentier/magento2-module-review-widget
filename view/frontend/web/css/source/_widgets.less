@@ -502,27 +502,6 @@
     }
 
     //
-    // Rating Stars - Premium Style
-    // ___________________________________________
-
-    .rating-result {
-        position: relative;
-        height: 20px;
-
-        // Custom star colors for luxury feel
-        &:before,
-        > span {
-            color: #d4af37; // Luxury gold
-        }
-
-        > span {
-            > span {
-                .lib-visually-hidden();
-            }
-        }
-    }
-
-    //
     // Loading States & Empty States
     // ___________________________________________
 
@@ -707,8 +686,7 @@
 @media (prefers-reduced-motion: reduce) {
     .widget-reviews-list,
     .review-card,
-    .review-item,
-    .action {
+    .review-item {
         transition: none;
         animation: none;
     }
