@@ -35,17 +35,17 @@ class RatingCalculator implements RatingCalculatorInterface
     /**
      * Cache key prefix
      */
-    private const CACHE_KEY_PREFIX = 'amadeco_review_widget_rating_';
+    public const CACHE_KEY_PREFIX = 'amadeco_review_widget_rating_';
 
     /**
      * Cache tag
      */
-    private const CACHE_TAG = 'AMADECO_REVIEW_WIDGET';
+    public const CACHE_TAG = 'AMADECO_REVIEW_WIDGET';
 
     /**
      * Minimum reviews required for rating calculation
      */
-    private const MIN_REVIEWS_REQUIRED = 1;
+    public const MIN_REVIEWS_REQUIRED = 1;
 
     /**
      * @param StoreRatingInterfaceFactory $storeRatingFactory
@@ -57,13 +57,13 @@ class RatingCalculator implements RatingCalculatorInterface
      * @param LoggerInterface $logger
      */
     public function __construct(
-        private readonly StoreRatingInterfaceFactory $storeRatingFactory,
-        private readonly ReviewRepositoryInterface $reviewRepository,
-        private readonly StoreManagerInterface $storeManager,
-        private readonly CacheInterface $cache,
-        private readonly SerializerInterface $serializer,
-        private readonly Config $config,
-        private readonly LoggerInterface $logger
+        protected readonly StoreRatingInterfaceFactory $storeRatingFactory,
+        protected readonly ReviewRepositoryInterface $reviewRepository,
+        protected readonly StoreManagerInterface $storeManager,
+        protected readonly CacheInterface $cache,
+        protected readonly SerializerInterface $serializer,
+        protected readonly Config $config,
+        protected readonly LoggerInterface $logger
     ) {
     }
 
