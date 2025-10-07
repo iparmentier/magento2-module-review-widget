@@ -21,6 +21,7 @@ use Amadeco\ReviewWidget\ViewModel\ReviewsList;
 use Magento\Framework\Exception\ValidatorException;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Widget\Block\BlockInterface;
 use Psr\Log\LoggerInterface;
 
@@ -39,19 +40,19 @@ class ReviewsListWidget extends Template implements BlockInterface
     /**
      * Default configuration values
      */
-    private const DEFAULT_SHOW_BADGE_RATING = false;
+    protected const DEFAULT_SHOW_BADGE_RATING = false;
 
     /**
      * Cache configuration
      */
-    private const CACHE_TAG_PREFIX = 'AMADECO_REVIEW_WIDGET_LIST';
+    protected const CACHE_TAG_PREFIX = 'AMADECO_REVIEW_WIDGET_LIST';
 
     /**
      * Badge rating block instance
      *
      * @var BadgeStoreRatingWidget|null
      */
-    private ?BadgeStoreRatingWidget $badgeRatingBlock = null;
+    protected ?BadgeStoreRatingWidget $badgeRatingBlock = null;
 
     /**
      * @param Context $context
@@ -64,14 +65,18 @@ class ReviewsListWidget extends Template implements BlockInterface
      */
     public function __construct(
         Context $context,
-        private readonly ReviewsList $reviewsListViewModel,
-        private readonly BadgeRating $badgeRatingViewModel,
-        private readonly Config $config,
-        private readonly InputValidator $inputValidator,
-        private readonly LoggerInterface $logger,
-        array $data = []
+        protected readonly ReviewsList $reviewsListViewModel,
+        protected readonly BadgeRating $badgeRatingViewModel,
+        protected readonly Config $config,
+        protected readonly InputValidator $inputValidator,
+        protected readonly LoggerInterface $logger,
+        array $data = [],
+        protected ?Json $serializer = null
     ) {
         parent::__construct($context, $data);
+
+        $this->serializer =
+            $serializer ?: \Magento\Framework\App\ObjectManager::getInstance()->get(Json::class);
     }
 
     /**
@@ -113,7 +118,7 @@ class ReviewsListWidget extends Template implements BlockInterface
             $this->_storeManager->getStore()->getId(),
             $this->_design->getDesignTheme()->getId(),
             $this->getTemplateFile(),
-            hash('xxh3', $this->_serializer->serialize($filters)),
+            base64_encode($this->serializer->serialize($filters)),
             $this->getShowBadgeRating() ? '1' : '0',
             $this->getBadgeRatingTemplate() ?: 'none'
         ];
