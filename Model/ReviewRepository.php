@@ -34,9 +34,9 @@ class ReviewRepository implements ReviewRepositoryInterface
     /**
      * Sort order constants
      */
-    private const SORT_ORDER_RECENT = 'recent';
-    private const SORT_ORDER_RATING = 'rating';
-    private const SORT_ORDER_RANDOM = 'random';
+    public const SORT_ORDER_RECENT = 'recent';
+    public const SORT_ORDER_RATING = 'rating';
+    public const SORT_ORDER_RANDOM = 'random';
 
     /**
      * @param ReviewCollectionFactory $reviewCollectionFactory
@@ -45,10 +45,10 @@ class ReviewRepository implements ReviewRepositoryInterface
      * @param LoggerInterface $logger
      */
     public function __construct(
-        private readonly ReviewCollectionFactory $reviewCollectionFactory,
-        private readonly StoreManagerInterface $storeManager,
-        private readonly InputValidator $inputValidator,
-        private readonly LoggerInterface $logger
+        protected readonly ReviewCollectionFactory $reviewCollectionFactory,
+        protected readonly StoreManagerInterface $storeManager,
+        protected readonly InputValidator $inputValidator,
+        protected readonly LoggerInterface $logger
     ) {
     }
 
