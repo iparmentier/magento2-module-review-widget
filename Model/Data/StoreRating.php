@@ -27,10 +27,10 @@ class StoreRating extends DataObject implements StoreRatingInterface
     /**
      * Data keys
      */
-    private const KEY_TOTAL = 'total';
-    private const KEY_PERCENTAGE = 'percentage';
-    private const KEY_NOTE = 'note';
-    private const KEY_AVERAGE_RATING = 'average_rating';
+    public const KEY_TOTAL = 'total';
+    public const KEY_PERCENTAGE = 'percentage';
+    public const KEY_NOTE = 'note';
+    public const KEY_AVERAGE_RATING = 'average_rating';
 
     /**
      * @inheritDoc
