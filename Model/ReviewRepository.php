@@ -18,11 +18,11 @@ use Amadeco\ReviewWidget\Api\ReviewRepositoryInterface;
 use Amadeco\ReviewWidget\Service\InputValidator;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Review\Model\ResourceModel\Review\Product\Collection;
 use Magento\Review\Model\ResourceModel\Review\Product\CollectionFactory as ReviewCollectionFactory;
 use Magento\Review\Model\Review;
 use Magento\Store\Model\StoreManagerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class ReviewRepository
@@ -39,16 +39,24 @@ class ReviewRepository implements ReviewRepositoryInterface
     public const SORT_ORDER_RANDOM = 'random';
 
     /**
+     * Rating vote table alias
+     */
+    private const RATING_VOTE_ALIAS = 'rov';
+
+    /**
+     * Category product table alias
+     */
+    private const CATEGORY_PRODUCT_ALIAS = 'ccp';
+
+    /**
      * @param ReviewCollectionFactory $reviewCollectionFactory
      * @param StoreManagerInterface $storeManager
      * @param InputValidator $inputValidator
-     * @param LoggerInterface $logger
      */
     public function __construct(
         protected readonly ReviewCollectionFactory $reviewCollectionFactory,
         protected readonly StoreManagerInterface $storeManager,
-        protected readonly InputValidator $inputValidator,
-        protected readonly LoggerInterface $logger
+        protected readonly InputValidator $inputValidator
     ) {
     }
 
@@ -62,8 +70,6 @@ class ReviewRepository implements ReviewRepositoryInterface
         /** @var Collection $collection */
         $collection = $this->reviewCollectionFactory->create();
 
-        // CRITICAL FIX: Do NOT use addReviewSummary() as it adds conflicting JOINs
-        // We'll add our own rating votes JOIN later
         $collection->addStoreFilter($storeId)
             ->addStatusFilter(Review::STATUS_APPROVED);
 
@@ -75,16 +81,10 @@ class ReviewRepository implements ReviewRepositoryInterface
      */
     public function getFilteredReviews(array $filters = [], ?int $storeId = null): Collection
     {
-        // Validate all inputs first
         $filters = $this->inputValidator->validateFilters($filters);
-
         $collection = $this->getApprovedReviews($storeId);
 
-        // CRITICAL FIX: Add rating votes BEFORE any other operations
-        // This ensures we control the JOIN and avoid conflicts
         $this->addRatingVotesToCollection($collection);
-
-        // Apply filters with validated inputs
         $this->applyFilters($collection, $filters);
 
         return $collection;
@@ -96,15 +96,17 @@ class ReviewRepository implements ReviewRepositoryInterface
     public function getReviewCount(?int $storeId = null): int
     {
         $collection = $this->getApprovedReviews($storeId);
-
         return $collection->getSize();
     }
 
     /**
      * Apply all filters to collection
      *
-     * CRITICAL: Filters must be applied in correct order to ensure SQL efficiency
-     * Order: WHERE filters -> JOIN filters -> HAVING filters -> SORT -> LIMIT
+     * Filters are applied in optimal order for SQL performance:
+     * 1. WHERE filters (indexed columns)
+     * 2. JOIN filters (related tables)
+     * 3. HAVING filters (aggregate functions)
+     * 4. SORT and LIMIT
      *
      * @param Collection $collection
      * @param array $filters Validated filters
@@ -112,7 +114,6 @@ class ReviewRepository implements ReviewRepositoryInterface
      */
     private function applyFilters(Collection $collection, array $filters): void
     {
-        // 1. Apply WHERE filters first (most restrictive, uses indexes)
         if (isset($filters['min_char_length']) && $filters['min_char_length'] > 0) {
             $this->applyMinCharLengthFilter($collection, (int) $filters['min_char_length']);
         }
@@ -121,25 +122,18 @@ class ReviewRepository implements ReviewRepositoryInterface
             $this->applyDateFilter($collection, (int) $filters['days_ago']);
         }
 
-        // 2. Apply JOIN filters (category filter requires JOIN)
         if (isset($filters['category_id']) && $filters['category_id'] > 0) {
             $this->applyCategoryFilter($collection, (int) $filters['category_id']);
         }
 
-        // 3. Apply HAVING filters (aggregate functions)
         if (isset($filters['min_rating']) && $filters['min_rating'] > 0) {
             $this->applyMinRatingFilter($collection, (float) $filters['min_rating']);
         }
 
-        // 4. Apply sorting
         $sortOrder = $filters['sort_order'] ?? self::SORT_ORDER_RANDOM;
         $this->applySortOrder($collection, $sortOrder);
 
-        // 5. Apply pagination
         if (isset($filters['page_size']) && $filters['page_size'] > 0) {
-            // CRITICAL FIX
-            //$collection->setPageSize((int) $filters['page_size']);
-            //$collection->setCurPage(1);
             $collection->getSelect()->limit((int) $filters['page_size']);
         }
     }
@@ -158,7 +152,7 @@ class ReviewRepository implements ReviewRepositoryInterface
         $minPercentage = ($minRating / 5) * 100;
 
         $collection->getSelect()->having(
-            'AVG(rov.percent) >= ?',
+            'AVG(' . self::RATING_VOTE_ALIAS . '.percent) >= ?',
             $minPercentage
         );
     }
@@ -166,8 +160,7 @@ class ReviewRepository implements ReviewRepositoryInterface
     /**
      * Add rating votes to collection with proper JOIN
      *
-     * CRITICAL: Must be called BEFORE any filters are applied
-     * CRITICAL FIX: Added comprehensive duplicate JOIN detection
+     * Uses Magento's standard approach with alias checking
      *
      * @param Collection $collection
      * @return void
@@ -177,32 +170,17 @@ class ReviewRepository implements ReviewRepositoryInterface
         $select = $collection->getSelect();
         $fromTables = $select->getPart(Select::FROM);
 
-        // Check if rating_option_vote JOIN already exists
-        if (isset($fromTables['rov'])) {
-            $this->logger->debug('Rating votes JOIN already exists, skipping');
+        if ($this->isTableJoined($fromTables, self::RATING_VOTE_ALIAS, 'rating_option_vote')) {
             return;
         }
 
-        // Check if any other alias points to rating_option_vote table
-        foreach ($fromTables as $alias => $tableInfo) {
-            if (isset($tableInfo['tableName']) &&
-                strpos($tableInfo['tableName'], 'rating_option_vote') !== false) {
-                $this->logger->debug(
-                    'Rating votes table already joined with different alias',
-                    ['existing_alias' => $alias]
-                );
-                return;
-            }
-        }
-
-        // Safe to add our JOIN
         $collection->getSelect()
             ->joinLeft(
-                ['rov' => $collection->getTable('rating_option_vote')],
-                'rov.review_id = rt.review_id',
+                [self::RATING_VOTE_ALIAS => $collection->getTable('rating_option_vote')],
+                self::RATING_VOTE_ALIAS . '.review_id = rt.review_id',
                 [
-                    'rating_summary' => 'AVG(rov.percent)',
-                    'rating_value' => 'AVG(rov.value)'
+                    'rating_summary' => 'AVG(' . self::RATING_VOTE_ALIAS . '.percent)',
+                    'rating_value' => 'AVG(' . self::RATING_VOTE_ALIAS . '.value)'
                 ]
             )
             ->group('rt.review_id');
@@ -228,8 +206,6 @@ class ReviewRepository implements ReviewRepositoryInterface
     /**
      * Apply category filter with JOIN
      *
-     * CRITICAL FIX: Check for duplicate JOIN before adding
-     *
      * @param Collection $collection
      * @param int $categoryId Validated category ID
      * @return void
@@ -239,22 +215,18 @@ class ReviewRepository implements ReviewRepositoryInterface
         $select = $collection->getSelect();
         $fromTables = $select->getPart(Select::FROM);
 
-        // Check if category product JOIN already exists
-        if (isset($fromTables['ccp'])) {
-            // Just add WHERE condition
-            $collection->getSelect()->where('ccp.category_id = ?', $categoryId);
-            $this->logger->debug('Category filter added to existing JOIN');
+        if ($this->isTableJoined($fromTables, self::CATEGORY_PRODUCT_ALIAS, 'catalog_category_product')) {
+            $collection->getSelect()->where(self::CATEGORY_PRODUCT_ALIAS . '.category_id = ?', $categoryId);
             return;
         }
 
-        // Safe to add JOIN
         $collection->getSelect()
             ->joinInner(
-                ['ccp' => $collection->getTable('catalog_category_product')],
-                'ccp.product_id = rt.entity_pk_value',
+                [self::CATEGORY_PRODUCT_ALIAS => $collection->getTable('catalog_category_product')],
+                self::CATEGORY_PRODUCT_ALIAS . '.product_id = rt.entity_pk_value',
                 []
             )
-            ->where('ccp.category_id = ?', $categoryId);
+            ->where(self::CATEGORY_PRODUCT_ALIAS . '.category_id = ?', $categoryId);
     }
 
     /**
@@ -284,7 +256,6 @@ class ReviewRepository implements ReviewRepositoryInterface
      */
     private function applySortOrder(Collection $collection, string $sortOrder): void
     {
-        // Reset any existing order
         $collection->getSelect()->reset(Select::ORDER);
 
         switch ($sortOrder) {
@@ -304,10 +275,35 @@ class ReviewRepository implements ReviewRepositoryInterface
     }
 
     /**
+     * Check if a table is already joined in the query
+     *
+     * @param array $fromTables Tables from SELECT
+     * @param string $alias Alias to check
+     * @param string $tableName Table name to check
+     * @return bool
+     */
+    private function isTableJoined(array $fromTables, string $alias, string $tableName): bool
+    {
+        if (isset($fromTables[$alias])) {
+            return true;
+        }
+
+        foreach ($fromTables as $tableInfo) {
+            if (isset($tableInfo['tableName']) &&
+                str_contains((string) $tableInfo['tableName'], $tableName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Validate and get store ID
      *
      * @param int|null $storeId
      * @return int
+     * @throws NoSuchEntityException
      * @throws LocalizedException
      */
     private function getValidatedStoreId(?int $storeId): int
@@ -317,7 +313,7 @@ class ReviewRepository implements ReviewRepositoryInterface
         }
 
         if ($storeId < 0) {
-            throw new LocalizedException(__('Invalid store ID: %1', $storeId));
+            throw new LocalizedException(__('Invalid store ID provided: %1', $storeId));
         }
 
         return $storeId;

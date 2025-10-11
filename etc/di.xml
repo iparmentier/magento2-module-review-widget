@@ -20,20 +20,6 @@
     <preference for="Amadeco\ReviewWidget\Api\Data\StoreRatingInterface"
                 type="Amadeco\ReviewWidget\Model\Data\StoreRating"/>
 
-    <!-- Configuration Helper -->
-    <type name="Amadeco\ReviewWidget\Helper\Config">
-        <arguments>
-            <argument name="configPath" xsi:type="string">catalog/review_widget</argument>
-        </arguments>
-    </type>
-
-    <!-- SchemaManager as Singleton -->
-    <type name="Amadeco\ReviewWidget\Helper\SchemaManager">
-        <arguments>
-            <argument name="config" xsi:type="object">Amadeco\ReviewWidget\Helper\Config</argument>
-        </arguments>
-    </type>
-
     <!-- Cache Pool -->
     <type name="Magento\Framework\App\Cache\Type\FrontendPool">
         <arguments>

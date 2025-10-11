@@ -18,11 +18,9 @@ use Amadeco\ReviewWidget\Helper\Config;
 use Amadeco\ReviewWidget\Service\InputValidator;
 use Amadeco\ReviewWidget\ViewModel\BadgeRating;
 use Amadeco\ReviewWidget\ViewModel\ReviewsList;
-use Magento\Framework\Exception\ValidatorException;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Widget\Block\BlockInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class ReviewsListWidget
@@ -59,7 +57,6 @@ class ReviewsListWidget extends Template implements BlockInterface
      * @param BadgeRating $badgeRatingViewModel
      * @param Config $config
      * @param InputValidator $inputValidator
-     * @param LoggerInterface $logger
      * @param array $data
      */
     public function __construct(
@@ -68,7 +65,6 @@ class ReviewsListWidget extends Template implements BlockInterface
         private readonly BadgeRating $badgeRatingViewModel,
         private readonly Config $config,
         private readonly InputValidator $inputValidator,
-        private readonly LoggerInterface $logger,
         array $data = []
     ) {
         parent::__construct($context, $data);
@@ -81,7 +77,6 @@ class ReviewsListWidget extends Template implements BlockInterface
     {
         parent::_construct();
 
-        // Prepare and validate filters for view model
         $filters = $this->prepareAndValidateFilters();
         $this->reviewsListViewModel->setFilters($filters);
 
@@ -204,7 +199,6 @@ class ReviewsListWidget extends Template implements BlockInterface
     {
         $filters = [];
 
-        // Extract widget configuration data
         if ($this->hasData('min_rating')) {
             $filters['min_rating'] = $this->getData('min_rating');
         }
@@ -236,7 +230,6 @@ class ReviewsListWidget extends Template implements BlockInterface
      * Prepare and validate filters
      *
      * @return array Validated filters
-     * @throws ValidatorException
      */
     private function prepareAndValidateFilters(): array
     {

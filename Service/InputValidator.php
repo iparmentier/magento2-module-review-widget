@@ -2,7 +2,7 @@
 /**
  * Input Validator Service
  *
- * Validates and sanitizes widget configuration inputs
+ * Validates and sanitizes widget configuration inputs with custom exceptions
  *
  * @category  Amadeco
  * @package   Amadeco_ReviewWidget
@@ -14,8 +14,7 @@ declare(strict_types=1);
 
 namespace Amadeco\ReviewWidget\Service;
 
-use Magento\Framework\Exception\ValidatorException;
-use Magento\Framework\Phrase;
+use Amadeco\ReviewWidget\Exception\InvalidFilterException;
 
 /**
  * Class InputValidator
@@ -47,7 +46,7 @@ class InputValidator
      *
      * @param float|string|null $rating
      * @return float|null
-     * @throws ValidatorException
+     * @throws InvalidFilterException
      */
     public function validateRating(float|string|null $rating): ?float
     {
@@ -58,11 +57,10 @@ class InputValidator
         $rating = (float) $rating;
 
         if ($rating < self::MIN_RATING || $rating > self::MAX_RATING) {
-            throw new ValidatorException(
-                new Phrase(
-                    'Rating must be between %1 and %2',
-                    [self::MIN_RATING, self::MAX_RATING]
-                )
+            throw InvalidFilterException::invalidRating(
+                $rating,
+                self::MIN_RATING,
+                self::MAX_RATING
             );
         }
 
@@ -74,7 +72,7 @@ class InputValidator
      *
      * @param int|string|null $length
      * @return int|null
-     * @throws ValidatorException
+     * @throws InvalidFilterException
      */
     public function validateCharLength(int|string|null $length): ?int
     {
@@ -85,11 +83,10 @@ class InputValidator
         $length = (int) $length;
 
         if ($length < self::MIN_CHAR_LENGTH || $length > self::MAX_CHAR_LENGTH) {
-            throw new ValidatorException(
-                new Phrase(
-                    'Character length must be between %1 and %2',
-                    [self::MIN_CHAR_LENGTH, self::MAX_CHAR_LENGTH]
-                )
+            throw InvalidFilterException::invalidCharLength(
+                $length,
+                self::MIN_CHAR_LENGTH,
+                self::MAX_CHAR_LENGTH
             );
         }
 
@@ -101,7 +98,7 @@ class InputValidator
      *
      * @param int|string|null $pageSize
      * @return int|null
-     * @throws ValidatorException
+     * @throws InvalidFilterException
      */
     public function validatePageSize(int|string|null $pageSize): ?int
     {
@@ -112,11 +109,10 @@ class InputValidator
         $pageSize = (int) $pageSize;
 
         if ($pageSize < self::MIN_PAGE_SIZE || $pageSize > self::MAX_PAGE_SIZE) {
-            throw new ValidatorException(
-                new Phrase(
-                    'Page size must be between %1 and %2',
-                    [self::MIN_PAGE_SIZE, self::MAX_PAGE_SIZE]
-                )
+            throw InvalidFilterException::invalidPageSize(
+                $pageSize,
+                self::MIN_PAGE_SIZE,
+                self::MAX_PAGE_SIZE
             );
         }
 
@@ -128,7 +124,7 @@ class InputValidator
      *
      * @param int|string|null $categoryId
      * @return int|null
-     * @throws ValidatorException
+     * @throws InvalidFilterException
      */
     public function validateCategoryId(int|string|null $categoryId): ?int
     {
@@ -139,9 +135,7 @@ class InputValidator
         $categoryId = (int) $categoryId;
 
         if ($categoryId < self::MIN_CATEGORY_ID) {
-            throw new ValidatorException(
-                new Phrase('Category ID must be a positive integer')
-            );
+            throw InvalidFilterException::invalidCategoryId($categoryId);
         }
 
         return $categoryId;
@@ -152,7 +146,7 @@ class InputValidator
      *
      * @param int|string|null $daysAgo
      * @return int|null
-     * @throws ValidatorException
+     * @throws InvalidFilterException
      */
     public function validateDaysAgo(int|string|null $daysAgo): ?int
     {
@@ -163,11 +157,10 @@ class InputValidator
         $daysAgo = (int) $daysAgo;
 
         if ($daysAgo < self::MIN_DAYS_AGO || $daysAgo > self::MAX_DAYS_AGO) {
-            throw new ValidatorException(
-                new Phrase(
-                    'Days ago must be between %1 and %2',
-                    [self::MIN_DAYS_AGO, self::MAX_DAYS_AGO]
-                )
+            throw InvalidFilterException::invalidDaysAgo(
+                $daysAgo,
+                self::MIN_DAYS_AGO,
+                self::MAX_DAYS_AGO
             );
         }
 
@@ -179,7 +172,7 @@ class InputValidator
      *
      * @param string|null $sortOrder
      * @return string|null
-     * @throws ValidatorException
+     * @throws InvalidFilterException
      */
     public function validateSortOrder(?string $sortOrder): ?string
     {
@@ -190,11 +183,9 @@ class InputValidator
         $sortOrder = strtolower(trim($sortOrder));
 
         if (!in_array($sortOrder, self::ALLOWED_SORT_ORDERS, true)) {
-            throw new ValidatorException(
-                new Phrase(
-                    'Sort order must be one of: %1',
-                    [implode(', ', self::ALLOWED_SORT_ORDERS)]
-                )
+            throw InvalidFilterException::invalidSortOrder(
+                $sortOrder,
+                self::ALLOWED_SORT_ORDERS
             );
         }
 
@@ -206,37 +197,59 @@ class InputValidator
      *
      * @param array $filters Raw filter array from widget configuration
      * @return array Validated and sanitized filters
-     * @throws ValidatorException
      */
     public function validateFilters(array $filters): array
     {
         $validated = [];
 
         if (isset($filters['min_rating'])) {
-            $validated['min_rating'] = $this->validateRating($filters['min_rating']);
+            try {
+                $validated['min_rating'] = $this->validateRating($filters['min_rating']);
+            } catch (InvalidFilterException $e) {
+                // Silent fail - invalid filter is skipped
+            }
         }
 
         if (isset($filters['min_char_length'])) {
-            $validated['min_char_length'] = $this->validateCharLength($filters['min_char_length']);
+            try {
+                $validated['min_char_length'] = $this->validateCharLength($filters['min_char_length']);
+            } catch (InvalidFilterException $e) {
+                // Silent fail - invalid filter is skipped
+            }
         }
 
         if (isset($filters['page_size'])) {
-            $validated['page_size'] = $this->validatePageSize($filters['page_size']);
+            try {
+                $validated['page_size'] = $this->validatePageSize($filters['page_size']);
+            } catch (InvalidFilterException $e) {
+                // Silent fail - invalid filter is skipped
+            }
         }
 
         if (isset($filters['category_id'])) {
-            $validated['category_id'] = $this->validateCategoryId($filters['category_id']);
+            try {
+                $validated['category_id'] = $this->validateCategoryId($filters['category_id']);
+            } catch (InvalidFilterException $e) {
+                // Silent fail - invalid filter is skipped
+            }
         }
 
         if (isset($filters['days_ago'])) {
-            $validated['days_ago'] = $this->validateDaysAgo($filters['days_ago']);
+            try {
+                $validated['days_ago'] = $this->validateDaysAgo($filters['days_ago']);
+            } catch (InvalidFilterException $e) {
+                // Silent fail - invalid filter is skipped
+            }
         }
 
         if (isset($filters['sort_order'])) {
-            $validated['sort_order'] = $this->validateSortOrder($filters['sort_order']);
+            try {
+                $validated['sort_order'] = $this->validateSortOrder($filters['sort_order']);
+            } catch (InvalidFilterException $e) {
+                // Silent fail - invalid filter is skipped
+            }
         }
 
-        // Remove null values
         return array_filter($validated, fn($value) => $value !== null);
     }
 
@@ -269,5 +282,28 @@ class InputValidator
             ],
             'sort_orders' => self::ALLOWED_SORT_ORDERS
         ];
+    }
+
+    /**
+     * Validate a single filter value
+     *
+     * Generic method for validating any filter type
+     *
+     * @param string $filterType Type of filter (rating, page_size, etc.)
+     * @param mixed $value Value to validate
+     * @return mixed Validated value
+     * @throws InvalidFilterException
+     */
+    public function validateFilter(string $filterType, mixed $value): mixed
+    {
+        return match ($filterType) {
+            'min_rating' => $this->validateRating($value),
+            'min_char_length' => $this->validateCharLength($value),
+            'page_size' => $this->validatePageSize($value),
+            'category_id' => $this->validateCategoryId($value),
+            'days_ago' => $this->validateDaysAgo($value),
+            'sort_order' => $this->validateSortOrder($value),
+            default => throw InvalidFilterException::unknownFilter($filterType)
+        };
     }
 }

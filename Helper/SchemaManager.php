@@ -3,6 +3,7 @@
  * Schema.org Manager Service
  *
  * Manages Schema.org data generation to prevent duplicates on the same page
+ * Uses instance properties that are safe within a single HTTP request lifecycle
  *
  * @category  Amadeco
  * @package   Amadeco_ReviewWidget
@@ -14,12 +15,11 @@ declare(strict_types=1);
 
 namespace Amadeco\ReviewWidget\Helper;
 
-use Psr\Log\LoggerInterface;
-
 /**
  * Class SchemaManager
  *
  * Ensures only one Schema.org markup is generated per page
+ * Instance properties are safe as each HTTP request gets its own DI container instance
  */
 class SchemaManager
 {
@@ -51,11 +51,9 @@ class SchemaManager
 
     /**
      * @param Config $config
-     * @param LoggerInterface $logger
      */
     public function __construct(
-        private readonly Config $config,
-        private readonly LoggerInterface $logger
+        private readonly Config $config
     ) {
     }
 
@@ -142,17 +140,10 @@ class SchemaManager
      */
     public function addReviewToCombined(array $reviewData): void
     {
-        try {
-            $reviewHash = md5(json_encode($reviewData));
+        $reviewHash = $this->createReviewHash($reviewData);
 
-            if (!isset($this->combinedReviews[$reviewHash])) {
-                $this->combinedReviews[$reviewHash] = $reviewData;
-            }
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'Error adding review to combined schema: ' . $e->getMessage(),
-                ['exception' => $e]
-            );
+        if (!isset($this->combinedReviews[$reviewHash])) {
+            $this->combinedReviews[$reviewHash] = $reviewData;
         }
     }
 
@@ -183,5 +174,22 @@ class SchemaManager
             'reviews' => !$this->isReviewsSchemaGenerated(),
             default => false
         };
+    }
+
+    /**
+     * Create unique hash for review data
+     *
+     * @param array $reviewData
+     * @return string
+     */
+    private function createReviewHash(array $reviewData): string
+    {
+        $hashData = [
+            $reviewData['author']['name'] ?? '',
+            $reviewData['datePublished'] ?? '',
+            $reviewData['reviewBody'] ?? ''
+        ];
+
+        return md5(json_encode($hashData));
     }
 }

@@ -20,7 +20,6 @@ use Amadeco\ReviewWidget\Helper\Config;
 use Amadeco\ReviewWidget\Helper\SchemaManager;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class BadgeRating
@@ -34,14 +33,12 @@ class BadgeRating implements ArgumentInterface
      * @param Config $config
      * @param SchemaManager $schemaManager
      * @param SerializerInterface $serializer
-     * @param LoggerInterface $logger
      */
     public function __construct(
         private readonly RatingCalculatorInterface $ratingCalculator,
         private readonly Config $config,
         private readonly SchemaManager $schemaManager,
-        private readonly SerializerInterface $serializer,
-        private readonly LoggerInterface $logger
+        private readonly SerializerInterface $serializer
     ) {
     }
 
@@ -71,24 +68,17 @@ class BadgeRating implements ArgumentInterface
             return;
         }
 
-        try {
-            $schemaData = [
-                '@context' => 'https://schema.org',
-                '@type' => 'AggregateRating',
-                'ratingValue' => number_format($storeRating->getNote(), 2),
-                'bestRating' => '5',
-                'worstRating' => '1',
-                'ratingCount' => $storeRating->getTotal()
-            ];
+        $schemaData = [
+            '@context' => 'https://schema.org',
+            '@type' => 'AggregateRating',
+            'ratingValue' => number_format($storeRating->getNote(), 2),
+            'bestRating' => '5',
+            'worstRating' => '1',
+            'ratingCount' => $storeRating->getTotal()
+        ];
 
-            $this->schemaManager->setStoreRatingData($schemaData);
-            $this->schemaManager->markBadgeSchemaAsGenerated();
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'Error preparing Schema.org data: ' . $e->getMessage(),
-                ['exception' => $e]
-            );
-        }
+        $this->schemaManager->setStoreRatingData($schemaData);
+        $this->schemaManager->markBadgeSchemaAsGenerated();
     }
 
     /**
@@ -103,16 +93,8 @@ class BadgeRating implements ArgumentInterface
             return '';
         }
 
-        try {
-            $json = $this->serializer->serialize($data);
-            return '<script type="application/ld+json">' . $json . '</script>';
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'Error generating Schema.org JSON-LD: ' . $e->getMessage(),
-                ['exception' => $e]
-            );
-            return '';
-        }
+        $json = $this->serializer->serialize($data);
+        return '<script type="application/ld+json">' . $json . '</script>';
     }
 
     /**
