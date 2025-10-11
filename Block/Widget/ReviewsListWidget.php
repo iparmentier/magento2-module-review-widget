@@ -81,24 +81,14 @@ class ReviewsListWidget extends Template implements BlockInterface
     {
         parent::_construct();
 
-        try {
-            // Prepare and validate filters for view model
-            $filters = $this->prepareAndValidateFilters();
-            $this->reviewsListViewModel->setFilters($filters);
+        // Prepare and validate filters for view model
+        $filters = $this->prepareAndValidateFilters();
+        $this->reviewsListViewModel->setFilters($filters);
 
-            $this->addData([
-                'cache_lifetime' => $this->config->getCacheLifetime(),
-                'cache_tags' => $this->getCacheTags(),
-            ]);
-        } catch (ValidatorException $e) {
-            $this->logger->error(
-                'Invalid widget configuration: ' . $e->getMessage(),
-                [
-                    'exception' => $e,
-                    'widget_data' => $this->getData()
-                ]
-            );
-        }
+        $this->addData([
+            'cache_lifetime' => $this->config->getCacheLifetime(),
+            'cache_tags' => $this->getCacheTags(),
+        ]);
     }
 
     /**
@@ -288,6 +278,8 @@ class ReviewsListWidget extends Template implements BlockInterface
         if (!$reviewCollection || $reviewCollection->getSize() === 0) {
             return '';
         }
+
+        echo $reviewCollection->getSelect()->__toString();
 
         return parent::_toHtml();
     }

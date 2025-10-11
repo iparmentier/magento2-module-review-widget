@@ -27,20 +27,20 @@ class InputValidator
     /**
      * Validation constraints
      */
-    private const MIN_RATING = 1.0;
-    private const MAX_RATING = 5.0;
-    private const MIN_CHAR_LENGTH = 0;
-    private const MAX_CHAR_LENGTH = 10000;
-    private const MIN_PAGE_SIZE = 1;
-    private const MAX_PAGE_SIZE = 100;
-    private const MIN_DAYS_AGO = 1;
-    private const MAX_DAYS_AGO = 3650; // ~10 years
-    private const MIN_CATEGORY_ID = 1;
+    public const MIN_RATING = 1.0;
+    public const MAX_RATING = 5.0;
+    public const MIN_CHAR_LENGTH = 0;
+    public const MAX_CHAR_LENGTH = 10000;
+    public const MIN_PAGE_SIZE = 1;
+    public const MAX_PAGE_SIZE = 100;
+    public const MIN_DAYS_AGO = 1;
+    public const MAX_DAYS_AGO = 3650; // ~10 years
+    public const MIN_CATEGORY_ID = 1;
 
     /**
      * Allowed sort orders
      */
-    private const ALLOWED_SORT_ORDERS = ['recent', 'rating', 'random'];
+    public const ALLOWED_SORT_ORDERS = ['recent', 'rating', 'random'];
 
     /**
      * Validate rating value

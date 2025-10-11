@@ -5,7 +5,7 @@
  * Provides data and logic for reviews list display
  *
  * @category  Amadeco
- * @package   Amadeco
+ * @package   Amadeco_ReviewWidget
  * @author    Ilan Parmentier <contact@amadeco.fr>
  * @copyright Copyright (c) 2025 Amadeco
  * @license   Proprietary License
@@ -41,6 +41,13 @@ class ReviewsList implements ArgumentInterface
     private ?array $filters = null;
 
     /**
+     * Flag to track if collection was already loaded
+     *
+     * @var bool
+     */
+    private bool $collectionLoaded = false;
+
+    /**
      * @param ReviewRepositoryInterface $reviewRepository
      * @param StoreManagerInterface $storeManager
      * @param Config $config
@@ -61,6 +68,8 @@ class ReviewsList implements ArgumentInterface
     /**
      * Set filters for review collection
      *
+     * CRITICAL: This resets the collection to force re-fetching with new filters
+     *
      * @param array $filters
      * @return void
      */
@@ -68,29 +77,57 @@ class ReviewsList implements ArgumentInterface
     {
         $this->filters = $filters;
         $this->reviewCollection = null;
+        $this->collectionLoaded = false;
     }
 
     /**
      * Get filtered review collection
      *
+     * CRITICAL FIX: Ensures collection is properly loaded with pagination limits
+     *
      * @return Collection
      */
     public function getReviewCollection(): Collection
     {
-        if ($this->reviewCollection === null) {
-            try {
-                $filters = $this->prepareFilters();
-                $this->reviewCollection = $this->reviewRepository->getFilteredReviews($filters);
-            } catch (\Exception $e) {
-                $this->logger->error(
-                    'Error getting review collection: ' . $e->getMessage(),
-                    ['exception' => $e]
-                );
-                $this->reviewCollection = $this->reviewRepository->getFilteredReviews([]);
-            }
-        }
+        if ($this->reviewCollection === null || !$this->collectionLoaded) {
+            $filters = $this->prepareFilters();
 
+            // Get collection from repository (filters already applied)
+            $this->reviewCollection = $this->reviewRepository->getFilteredReviews($filters);
+
+            // Mark as loaded to prevent re-loading
+            $this->collectionLoaded = true;
+        }
         return $this->reviewCollection;
+    }
+
+    /**
+     * Get collection size (total count respecting filters)
+     *
+     * @return int
+     */
+    public function getCollectionSize(): int
+    {
+        try {
+            $collection = $this->getReviewCollection();
+            return $collection->getSize();
+        } catch (\Exception $e) {
+            $this->logger->error(
+                'Error getting collection size: ' . $e->getMessage(),
+                ['exception' => $e]
+            );
+            return 0;
+        }
+    }
+
+    /**
+     * Check if collection has items
+     *
+     * @return bool
+     */
+    public function hasReviews(): bool
+    {
+        return $this->getCollectionSize() > 0;
     }
 
     /**
@@ -122,6 +159,7 @@ class ReviewsList implements ArgumentInterface
                 return '';
             }
 
+            // Limit to 5 reviews for Schema.org (Google recommendation)
             $allReviews = array_slice($allReviews, 0, 5);
 
             $structuredData = [
@@ -146,6 +184,8 @@ class ReviewsList implements ArgumentInterface
     /**
      * Add this widget's reviews to the combined collection
      *
+     * CRITICAL FIX: Properly iterates over limited collection
+     *
      * @param int $limit Maximum reviews from this widget
      * @return void
      */
@@ -156,10 +196,12 @@ class ReviewsList implements ArgumentInterface
         }
 
         try {
+            // Get the properly limited collection
             $collection = $this->getReviewCollection();
             $count = 0;
 
-            foreach ($collection as $review) {
+            // CRITICAL FIX: Use getItems() which now respects pagination
+            foreach ($collection->getItems() as $review) {
                 if ($count >= $limit) {
                     break;
                 }
@@ -184,6 +226,15 @@ class ReviewsList implements ArgumentInterface
                 $this->schemaManager->addReviewToCombined($reviewData);
                 $count++;
             }
+
+            $this->logger->debug(
+                'Added reviews to Schema.org combined data',
+                [
+                    'count' => $count,
+                    'limit' => $limit
+                ]
+            );
+
         } catch (\Exception $e) {
             $this->logger->error(
                 'Error adding reviews to combined schema: ' . $e->getMessage(),
@@ -201,21 +252,28 @@ class ReviewsList implements ArgumentInterface
     {
         $filters = $this->filters ?? [];
 
-        if (!isset($filters['min_rating'])) {
+        // Apply defaults only if not already set
+        if (!isset($filters['min_rating']) || $filters['min_rating'] === null) {
             $filters['min_rating'] = $this->config->getDefaultMinRating();
         }
 
-        if (!isset($filters['min_char_length'])) {
+        if (!isset($filters['min_char_length']) || $filters['min_char_length'] === null) {
             $filters['min_char_length'] = $this->config->getDefaultMinCharLength();
         }
 
-        if (!isset($filters['page_size'])) {
+        // CRITICAL: Always ensure page_size is set
+        if (!isset($filters['page_size']) || $filters['page_size'] === null || $filters['page_size'] <= 0) {
             $filters['page_size'] = $this->config->getDefaultPageSize();
         }
 
-        if (!isset($filters['sort_order'])) {
+        if (!isset($filters['sort_order']) || $filters['sort_order'] === null) {
             $filters['sort_order'] = 'random';
         }
+
+        $this->logger->debug(
+            'Prepared filters for review collection',
+            ['filters' => $filters]
+        );
 
         return $filters;
     }
@@ -228,17 +286,19 @@ class ReviewsList implements ArgumentInterface
      */
     public function getReviewRatingSummary($review): float
     {
+        // Try rating_summary first (from aggregate)
         $ratingSummary = $review->getData('rating_summary');
-
         if ($ratingSummary !== null && $ratingSummary > 0) {
             return (float) $ratingSummary;
         }
 
+        // Try rating_value (from vote)
         $ratingValue = $review->getData('rating_value');
         if ($ratingValue !== null && $ratingValue > 0) {
             return (float) $ratingValue * 20;
         }
 
+        // Fallback to sum/count calculation
         $sum = $review->getData('sum');
         $count = $review->getData('count');
 
@@ -246,6 +306,7 @@ class ReviewsList implements ArgumentInterface
             return (float) ($sum / $count);
         }
 
+        // Log warning if no rating found
         $this->logger->warning(
             'Could not determine rating for review',
             ['review_id' => $review->getId()]
@@ -255,27 +316,12 @@ class ReviewsList implements ArgumentInterface
     }
 
     /**
-     * Check if lazy loading is enabled
-     *
-     * @return bool
-     */
-    public function isLazyLoadingEnabled(): bool
-    {
-        return $this->config->isLazyLoadingEnabled();
-    }
-
-    /**
      * Get store base URL
      *
      * @return string
      */
     public function getBaseUrl(): string
     {
-        try {
-            return $this->storeManager->getStore()->getBaseUrl();
-        } catch (\Exception $e) {
-            $this->logger->error('Error getting base URL: ' . $e->getMessage());
-            return '';
-        }
+        return $this->storeManager->getStore()->getBaseUrl();
     }
 }

@@ -52,15 +52,7 @@ class BadgeRating implements ArgumentInterface
      */
     public function getStoreRating(): ?StoreRatingInterface
     {
-        try {
-            return $this->ratingCalculator->getStoreRating();
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'Error in BadgeRating ViewModel: ' . $e->getMessage(),
-                ['exception' => $e]
-            );
-            return null;
-        }
+        return $this->ratingCalculator->getStoreRating();
     }
 
     /**
