@@ -37,17 +37,17 @@ class RatingCalculator implements RatingCalculatorInterface
     /**
      * Cache key prefix
      */
-    private const CACHE_KEY_PREFIX = 'amadeco_review_widget_rating_';
+    public const CACHE_KEY_PREFIX = 'amadeco_review_widget_rating_';
 
     /**
      * Cache tag
      */
-    private const CACHE_TAG = 'AMADECO_REVIEW_WIDGET';
+    public const CACHE_TAG = 'AMADECO_REVIEW_WIDGET';
 
     /**
      * Minimum reviews required for rating calculation
      */
-    private const MIN_REVIEWS_REQUIRED = 1;
+    public const MIN_REVIEWS_REQUIRED = 1;
 
     /**
      * @param StoreRatingInterfaceFactory $storeRatingFactory
@@ -59,13 +59,13 @@ class RatingCalculator implements RatingCalculatorInterface
      * @param LoggerInterface $logger
      */
     public function __construct(
-        private readonly StoreRatingInterfaceFactory $storeRatingFactory,
-        private readonly ReviewCollectionFactory $reviewCollectionFactory,
-        private readonly StoreManagerInterface $storeManager,
-        private readonly CacheInterface $cache,
-        private readonly SerializerInterface $serializer,
-        private readonly Config $config,
-        private readonly LoggerInterface $logger
+        protected readonly StoreRatingInterfaceFactory $storeRatingFactory,
+        protected readonly ReviewCollectionFactory $reviewCollectionFactory,
+        protected readonly StoreManagerInterface $storeManager,
+        protected readonly CacheInterface $cache,
+        protected readonly SerializerInterface $serializer,
+        protected readonly Config $config,
+        protected readonly LoggerInterface $logger
     ) {
     }
 
@@ -290,47 +290,37 @@ class RatingCalculator implements RatingCalculatorInterface
      */
     private function addRatingVotesToCollection(Collection $collection): void
     {
-        try {
-            $select = $collection->getSelect();
-            $fromTables = $select->getPart(Select::FROM);
+        $select = $collection->getSelect();
+        $fromTables = $select->getPart(Select::FROM);
 
-            // Check if rating_option_vote JOIN already exists
-            if (isset($fromTables['rov'])) {
-                $this->logger->debug('Rating votes JOIN already exists in RatingCalculator');
+        // Check if rating_option_vote JOIN already exists
+        if (isset($fromTables['rov'])) {
+            $this->logger->debug('Rating votes JOIN already exists in RatingCalculator');
+            return;
+        }
+
+        // Check if any other alias points to rating_option_vote table
+        foreach ($fromTables as $alias => $tableInfo) {
+            if (isset($tableInfo['tableName']) &&
+                strpos($tableInfo['tableName'], 'rating_option_vote') !== false) {
+                $this->logger->debug(
+                    'Rating votes table already joined with different alias in RatingCalculator',
+                    ['existing_alias' => $alias]
+                );
                 return;
             }
-
-            // Check if any other alias points to rating_option_vote table
-            foreach ($fromTables as $alias => $tableInfo) {
-                if (isset($tableInfo['tableName']) &&
-                    strpos($tableInfo['tableName'], 'rating_option_vote') !== false) {
-                    $this->logger->debug(
-                        'Rating votes table already joined with different alias in RatingCalculator',
-                        ['existing_alias' => $alias]
-                    );
-                    return;
-                }
-            }
-
-            // Safe to add our JOIN
-            $collection->getSelect()
-                ->joinLeft(
-                    ['rov' => $collection->getTable('rating_option_vote')],
-                    'rov.review_id = rt.review_id',
-                    [
-                        'rating_summary' => 'AVG(rov.percent)',
-                        'rating_value' => 'AVG(rov.value)'
-                    ]
-                )
-                ->group('rt.review_id');
-
-            $this->logger->debug('Rating votes JOIN added successfully in RatingCalculator');
-
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'Error adding rating votes to collection in RatingCalculator: ' . $e->getMessage(),
-                ['exception' => $e]
-            );
         }
+
+        // Safe to add our JOIN
+        $collection->getSelect()
+            ->joinLeft(
+                ['rov' => $collection->getTable('rating_option_vote')],
+                'rov.review_id = rt.review_id',
+                [
+                    'rating_summary' => 'AVG(rov.percent)',
+                    'rating_value' => 'AVG(rov.value)'
+                ]
+            )
+            ->group('rt.review_id');
     }
 }
