@@ -15,14 +15,14 @@ declare(strict_types=1);
 namespace Amadeco\ReviewWidget\Model\Data;
 
 use Amadeco\ReviewWidget\Api\Data\StoreRatingInterface;
-use Magento\Framework\Api\AbstractSimpleObject;
+use Magento\Framework\DataObject;
 
 /**
  * Class StoreRating
  *
- * Immutable data transfer object for store rating
+ * Data transfer object for store rating information
  */
-class StoreRating extends AbstractSimpleObject implements StoreRatingInterface
+class StoreRating extends DataObject implements StoreRatingInterface
 {
     /**
      * Data keys
