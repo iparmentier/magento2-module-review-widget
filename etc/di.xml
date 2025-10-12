@@ -20,6 +20,24 @@
     <preference for="Amadeco\ReviewWidget\Api\Data\StoreRatingInterface"
                 type="Amadeco\ReviewWidget\Model\Data\StoreRating"/>
 
+    <!--
+        SchemaManager: Non-Shared Service
+
+        The SchemaManager is marked as non-shared (shared="false") to ensure
+        a new instance is created for each HTTP request. This is the recommended
+        Magento 2 approach for request-scoped services that need to maintain state.
+
+        Why non-shared?
+        - Prevents state leakage between requests
+        - Thread-safe for concurrent requests
+        - Compatible with Full Page Cache (FPC)
+        - No need for deprecated Registry pattern
+
+        Each page render gets its own SchemaManager instance, ensuring that
+        Schema.org markup is correctly generated once per page without duplicates.
+    -->
+    <type name="Amadeco\ReviewWidget\Helper\SchemaManager" shared="false" />
+
     <!-- Cache Pool -->
     <type name="Magento\Framework\App\Cache\Type\FrontendPool">
         <arguments>

@@ -272,8 +272,6 @@ class ReviewsListWidget extends Template implements BlockInterface
             return '';
         }
 
-        echo $reviewCollection->getSelect()->__toString();
-
         return parent::_toHtml();
     }
 }

@@ -3,7 +3,7 @@
  * Schema.org Manager Service
  *
  * Manages Schema.org data generation to prevent duplicates on the same page
- * Uses instance properties that are safe within a single HTTP request lifecycle
+ * Uses non-shared service instance for request-scoped state management
  *
  * @category  Amadeco
  * @package   Amadeco_ReviewWidget
@@ -19,12 +19,18 @@ namespace Amadeco\ReviewWidget\Helper;
  * Class SchemaManager
  *
  * Ensures only one Schema.org markup is generated per page
- * Instance properties are safe as each HTTP request gets its own DI container instance
+ *
+ * This service is configured as non-shared (shared="false" in di.xml)
+ * which means Magento creates a new instance for each HTTP request.
+ * This is the recommended Magento 2 approach for request-scoped services.
+ *
+ * @see etc/di.xml for the shared="false" configuration
  */
 class SchemaManager
 {
     /**
      * Flags to track if schema has been generated in current request
+     * Safe to use instance properties because service is non-shared
      *
      * @var bool
      */
@@ -190,6 +196,6 @@ class SchemaManager
             $reviewData['reviewBody'] ?? ''
         ];
 
-        return md5(json_encode($hashData));
+        return hash('xxh128', json_encode($hashData));
     }
 }
