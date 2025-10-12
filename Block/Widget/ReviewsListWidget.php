@@ -30,26 +30,26 @@ use Magento\Widget\Block\BlockInterface;
 class ReviewsListWidget extends Template implements BlockInterface
 {
     /**
-     * Default template
-     */
-    protected $_template = 'Amadeco_ReviewWidget::widget/reviewslist/carousel.phtml';
-
-    /**
      * Default configuration values
      */
-    private const DEFAULT_SHOW_BADGE_RATING = false;
+    public const DEFAULT_SHOW_BADGE_RATING = false;
 
     /**
      * Cache configuration
      */
-    private const CACHE_TAG_PREFIX = 'AMADECO_REVIEW_WIDGET_LIST';
+    public const CACHE_TAG_PREFIX = 'AMADECO_REVIEW_WIDGET_LIST';
+
+    /**
+     * Default template
+     */
+    protected $_template = 'Amadeco_ReviewWidget::widget/reviewslist/carousel.phtml';
 
     /**
      * Badge rating block instance
      *
      * @var BadgeStoreRatingWidget|null
      */
-    private ?BadgeStoreRatingWidget $badgeRatingBlock = null;
+    protected ?BadgeStoreRatingWidget $badgeRatingBlock = null;
 
     /**
      * @param Context $context
@@ -61,10 +61,10 @@ class ReviewsListWidget extends Template implements BlockInterface
      */
     public function __construct(
         Context $context,
-        private readonly ReviewsList $reviewsListViewModel,
-        private readonly BadgeRating $badgeRatingViewModel,
-        private readonly Config $config,
-        private readonly InputValidator $inputValidator,
+        protected readonly ReviewsList $reviewsListViewModel,
+        protected readonly BadgeRating $badgeRatingViewModel,
+        protected readonly Config $config,
+        protected readonly InputValidator $inputValidator,
         array $data = []
     ) {
         parent::__construct($context, $data);
@@ -99,7 +99,7 @@ class ReviewsListWidget extends Template implements BlockInterface
             $this->_design->getDesignTheme()->getId(),
             $this->getTemplateFile(),
             hash('xxh3', $this->_serializer->serialize($filters)),
-            $this->getShowBadgeRating() ? '1' : '0',
+            (int) $this->getShowBadgeRating(),
             $this->getBadgeRatingTemplate() ?: 'none'
         ];
     }
@@ -113,7 +113,6 @@ class ReviewsListWidget extends Template implements BlockInterface
     {
         return [
             \Magento\Review\Model\Review::CACHE_TAG,
-            'AMADECO_REVIEW_WIDGET',
             self::CACHE_TAG_PREFIX . '_' . $this->_storeManager->getStore()->getId()
         ];
     }

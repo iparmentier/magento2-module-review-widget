@@ -28,19 +28,19 @@ use Magento\Widget\Block\BlockInterface;
 class BadgeStoreRatingWidget extends Template implements BlockInterface
 {
     /**
-     * Default template path
-     */
-    protected $_template = 'Amadeco_ReviewWidget::widget/badge/block.phtml';
-
-    /**
      * Default configuration values
      */
-    private const DEFAULT_SHOW_RATING_SUMMARY = true;
+    public const DEFAULT_SHOW_RATING_SUMMARY = true;
 
     /**
      * Cache configuration
      */
-    private const CACHE_TAG_PREFIX = 'AMADECO_REVIEW_WIDGET_BADGE';
+    public const CACHE_TAG_PREFIX = 'AMADECO_REVIEW_WIDGET_BADGE';
+
+    /**
+     * Default template path
+     */
+    protected $_template = 'Amadeco_ReviewWidget::widget/badge/block.phtml';
 
     /**
      * @param Context $context
@@ -50,8 +50,8 @@ class BadgeStoreRatingWidget extends Template implements BlockInterface
      */
     public function __construct(
         Context $context,
-        private readonly BadgeRating $badgeRatingViewModel,
-        private readonly Config $config,
+        protected readonly BadgeRating $badgeRatingViewModel,
+        protected readonly Config $config,
         array $data = []
     ) {
         parent::__construct($context, $data);
@@ -80,8 +80,8 @@ class BadgeStoreRatingWidget extends Template implements BlockInterface
             $this->_storeManager->getStore()->getId(),
             $this->_design->getDesignTheme()->getId(),
             $this->getTemplateFile(),
-            $this->getShowRatingSummary() ? '1' : '0',
-            $this->getCustomCssClass()
+            (int) $this->getShowRatingSummary(),
+            $this->getCustomCssClass() ?: 'default'
         ];
     }
 
@@ -94,8 +94,7 @@ class BadgeStoreRatingWidget extends Template implements BlockInterface
     {
         return [
             \Magento\Review\Model\Review::CACHE_TAG,
-            'AMADECO_REVIEW_WIDGET',
-            self::CACHE_TAG_PREFIX . '_' . $this->_storeManager->getStore()->getId()
+            self::CACHE_TAG_PREFIX . $this->_storeManager->getStore()->getId()
         ];
     }
 

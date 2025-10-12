@@ -284,14 +284,23 @@ class ReviewRepository implements ReviewRepositoryInterface
      */
     private function isTableJoined(array $fromTables, string $alias, string $tableName): bool
     {
+        // Direct alias check
         if (isset($fromTables[$alias])) {
             return true;
         }
 
+        // Check by exact table name match
+        $fullTableName = $this->reviewCollectionFactory->create()->getTable($tableName);
+
         foreach ($fromTables as $tableInfo) {
-            if (isset($tableInfo['tableName']) &&
-                str_contains((string) $tableInfo['tableName'], $tableName)) {
-                return true;
+            if (isset($tableInfo['tableName'])) {
+                $currentTable = is_array($tableInfo['tableName'])
+                    ? current($tableInfo['tableName'])
+                    : $tableInfo['tableName'];
+
+                if ($currentTable === $fullTableName) {
+                    return true;
+                }
             }
         }
 

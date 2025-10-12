@@ -34,32 +34,32 @@ class SchemaManager
      *
      * @var bool
      */
-    private bool $badgeSchemaGenerated = false;
+    protected bool $badgeSchemaGenerated = false;
 
     /**
      * @var bool
      */
-    private bool $reviewsSchemaGenerated = false;
+    protected bool $reviewsSchemaGenerated = false;
 
     /**
      * Combined reviews data from all widgets on the page
      *
      * @var array
      */
-    private array $combinedReviews = [];
+    protected array $combinedReviews = [];
 
     /**
      * Store rating data for schema
      *
      * @var array|null
      */
-    private ?array $storeRatingData = null;
+    protected ?array $storeRatingData = null;
 
     /**
      * @param Config $config
      */
     public function __construct(
-        private readonly Config $config
+        protected readonly Config $config
     ) {
     }
 

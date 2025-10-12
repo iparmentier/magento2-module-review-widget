@@ -28,11 +28,6 @@ use Magento\Review\Model\Review;
 class ClearReviewCache implements ObserverInterface
 {
     /**
-     * Cache tag for review widgets
-     */
-    private const CACHE_TAG = 'AMADECO_REVIEW_WIDGET';
-
-    /**
      * @param RatingCalculatorInterface $ratingCalculator
      * @param CacheInterface $cache
      */
@@ -81,7 +76,7 @@ class ClearReviewCache implements ObserverInterface
     private function clearStoreCache(int $storeId): void
     {
         $this->ratingCalculator->clearCache($storeId);
-        $this->cache->clean([self::CACHE_TAG]);
+        $this->cache->clean([Review::CACHE_TAG]);
     }
 
     /**
@@ -92,6 +87,6 @@ class ClearReviewCache implements ObserverInterface
     private function clearAllCache(): void
     {
         $this->ratingCalculator->clearCache();
-        $this->cache->clean([self::CACHE_TAG]);
+        $this->cache->clean([Review::CACHE_TAG]);
     }
 }

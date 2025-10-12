@@ -23,6 +23,7 @@ use Magento\Framework\App\CacheInterface;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Review\Model\ResourceModel\Review\Product\Collection;
 use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class RatingCalculator
@@ -37,9 +38,9 @@ class RatingCalculator implements RatingCalculatorInterface
     public const CACHE_KEY_PREFIX = 'amadeco_review_widget_rating_';
 
     /**
-     * Cache tag
+     * Cache tags - using Magento's standard Review cache tag
      */
-    public const CACHE_TAG = 'AMADECO_REVIEW_WIDGET';
+    public const CACHE_TAG = \Magento\Review\Model\Review::CACHE_TAG;
 
     /**
      * Minimum reviews required for rating calculation
@@ -53,6 +54,7 @@ class RatingCalculator implements RatingCalculatorInterface
      * @param CacheInterface $cache
      * @param SerializerInterface $serializer
      * @param Config $config
+     * @param LoggerInterface $logger
      */
     public function __construct(
         protected readonly StoreRatingInterfaceFactory $storeRatingFactory,
@@ -60,7 +62,8 @@ class RatingCalculator implements RatingCalculatorInterface
         protected readonly StoreManagerInterface $storeManager,
         protected readonly CacheInterface $cache,
         protected readonly SerializerInterface $serializer,
-        protected readonly Config $config
+        protected readonly Config $config,
+        protected readonly LoggerInterface $logger
     ) {
     }
 
@@ -92,6 +95,10 @@ class RatingCalculator implements RatingCalculatorInterface
         }
 
         if ($totalVotes < self::MIN_REVIEWS_REQUIRED) {
+            $this->logger->info('Insufficient reviews for rating calculation', [
+                'total_votes' => $totalVotes,
+                'required' => self::MIN_REVIEWS_REQUIRED
+            ]);
             return null;
         }
 
@@ -124,9 +131,11 @@ class RatingCalculator implements RatingCalculatorInterface
             return $this->storeRatingFactory->create(['data' => $data]);
         }
 
+        // Calculate rating
         $reviewCollection = $this->reviewRepository->getApprovedReviews($storeId);
         $storeRating = $this->calculateStoreRating($reviewCollection);
 
+        // Save to cache if we have a valid rating
         if ($storeRating) {
             $cacheLifetime = $this->config->getCacheLifetime();
             $this->cache->save(

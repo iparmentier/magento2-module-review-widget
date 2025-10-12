@@ -15,6 +15,7 @@
         <section id="catalog">
             <group id="review_widget" translate="label" type="text" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Review Widget Settings</label>
+                <resource>Amadeco_ReviewWidget::config</resource>
                 <field id="enable_schema_org" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Schema.org Markup</label>
                     <comment>Add structured data for better SEO (Rich Snippets)</comment>

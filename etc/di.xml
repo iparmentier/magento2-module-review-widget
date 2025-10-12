@@ -38,20 +38,4 @@
     -->
     <type name="Amadeco\ReviewWidget\Helper\SchemaManager" shared="false" />
 
-    <!-- Cache Pool -->
-    <type name="Magento\Framework\App\Cache\Type\FrontendPool">
-        <arguments>
-            <argument name="typeFrontendMap" xsi:type="array">
-                <item name="amadeco_review_widget" xsi:type="string">amadeco_review_widget_cache</item>
-            </argument>
-        </arguments>
-    </type>
-
-    <virtualType name="amadeco_review_widget_cache" type="Magento\Framework\Cache\Frontend\Decorator\TagScope">
-        <arguments>
-            <argument name="cacheFrontend" xsi:type="object">default</argument>
-            <argument name="tag" xsi:type="string">AMADECO_REVIEW_WIDGET</argument>
-        </arguments>
-    </virtualType>
-
 </config>
