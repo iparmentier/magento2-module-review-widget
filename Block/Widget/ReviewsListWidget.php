@@ -18,6 +18,7 @@ use Amadeco\ReviewWidget\Helper\Config;
 use Amadeco\ReviewWidget\Service\InputValidator;
 use Amadeco\ReviewWidget\ViewModel\BadgeRating;
 use Amadeco\ReviewWidget\ViewModel\ReviewsList;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Widget\Block\BlockInterface;
@@ -57,6 +58,7 @@ class ReviewsListWidget extends Template implements BlockInterface
      * @param BadgeRating $badgeRatingViewModel
      * @param Config $config
      * @param InputValidator $inputValidator
+     * @param Json $serializer
      * @param array $data
      */
     public function __construct(
@@ -65,6 +67,7 @@ class ReviewsListWidget extends Template implements BlockInterface
         protected readonly BadgeRating $badgeRatingViewModel,
         protected readonly Config $config,
         protected readonly InputValidator $inputValidator,
+        protected readonly Json $serializer,
         array $data = []
     ) {
         parent::__construct($context, $data);
@@ -98,7 +101,7 @@ class ReviewsListWidget extends Template implements BlockInterface
             $this->_storeManager->getStore()->getId(),
             $this->_design->getDesignTheme()->getId(),
             $this->getTemplateFile(),
-            hash('xxh3', $this->_serializer->serialize($filters)),
+            hash('xxh3', $this->serializer->serialize($filters)),
             (int) $this->getShowBadgeRating(),
             $this->getBadgeRatingTemplate() ?: 'none'
         ];
